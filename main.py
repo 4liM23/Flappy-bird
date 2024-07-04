@@ -1,4 +1,5 @@
 import pygame as pg
+import random
 import json
 import random
 import time
@@ -11,6 +12,8 @@ SCREEN_WIDTH = 450
 
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
+BACKGROUND = pg.image.load(r"assets/sprites/background-day.png")
+BACKGROUND = pg.transform.scale(BACKGROUND, (SCREEN_WIDTH, SCREEN_HEIGHT))
 class ImageHandler():
 
     def __init__(self) -> None:
@@ -45,6 +48,9 @@ class Bird(pg.sprite.Sprite):
 
     def __init__(self) -> None:
         super().__init__()
+        self.images = [pg.image.load(r"assets/sprites/bluebird-downflap.png"),
+                       pg.image.load(r"assets/sprites/bluebird-midflap.png"),
+                       pg.image.load(r"assets/sprites/bluebird-upflap.png")]
         self.images = [pg.image.load(r".\assets\sprites\bluebird-downflap.png"),
                         pg.image.load(r".\assets\sprites\bluebird-midflap.png"),
                         pg.image.load(r".\assets\sprites\bluebird-upflap.png")]
@@ -59,12 +65,11 @@ class Bird(pg.sprite.Sprite):
         self.velocity = 0
         self.acceleration = 0.1
 
-
-# Vf = Vi + a * t
+    # Vf = Vi + a * t
     def update(self):
         # updating flapping animation
-        self.image_number+=1
-        self.image_number%=3
+        self.image_number += 1
+        self.image_number %= 3
         self.image = self.images[self.image_number]
 
         # updating falling variables and y position
@@ -75,7 +80,7 @@ class Bird(pg.sprite.Sprite):
     def jump(self):
         self.velocity = 12
         self.rect.y += self.velocity
-        self.fall_time= 0
+        self.fall_time = 0
 
 
 class GameState():
@@ -110,6 +115,44 @@ class GameState():
         pg.draw.rect(self.img.BACKGROUND, self.img.BLACK, self.img.ONE)
 
 
+class Pipes(pg.sprite.Sprite):
+    def __init__(self, bird: Bird, y, up):
+        super().__init__()
+        self.up = up
+        self.vertical_distance = bird.rect.size[1] * 3
+        self.y = y
+        # loading the images
+        self.images = [pg.image.load('assets/sprites/pipe-red.png'), pg.image.load('assets/s        prites/pipe-green.png')]
+
+        # selecting the images
+        self.image_idx = random.randint(0, 2) % 2
+        self.image = self.images[self.image_idx] if not self.up else pg.transform.flip(self.images[self.image_idx],
+                                                                                       False, True)
+
+        # Where will it be placed
+        self.x = SCREEN_WIDTH // 3
+
+        # down
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = (SCREEN_HEIGHT // 2) - self.y + self.vertical_distance
+
+    def update(self):
+        self.rect.x -= 10
+        if self.rect.x + self.rect.size[0] <= 0:
+            self.rect.x = SCREEN_WIDTH + 30
+        # self.image_idx = random.randint(0, 2) % 2
+        # self.image = self.images[self.image_idx]
+
+
+def generate_pipe(bird_ref: Bird):
+    pipe_list = [0, 0]
+    for i in range(2):
+        try:
+            pipe_list[i] = Pipes(bird_ref, pipe_list[0].rect.y, i)
+        except Exception:
+            pipe_list[i] = Pipes(bird, 0, i)
+    return pipe_list                            
 
 
 bird = Bird()
@@ -117,9 +160,23 @@ game_state = GameState()
 bird_group = pg.sprite.Group()
 bird_group.add(bird)
 
-running = True 
+# Pipes
+pipes_list = generate_pipe(bird)
+pipes_groups = pg.sprite.Group()
+for pipe in pipes_list:
+    pipes_groups.add(pipe)
+
+running = True
 while running:
     clock.tick(20)
+    screen.blit(BACKGROUND, (0, 0))
+    # pipe
+    i = 0
+    for pipe in pipes_list:
+        i += 1
+        pipe.update()
+    pipes_groups.draw(screen)
+
     screen.blit(game_state.img.BACKGROUND, (0, 0))
     bird.update()
     bird_group.draw(screen)
