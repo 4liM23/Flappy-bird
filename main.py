@@ -48,37 +48,45 @@ class Bird(pg.sprite.Sprite):
 
 
 class Pipes(pg.sprite.Sprite):
-    def __init__(self, bird: Bird):
+    def __init__(self, bird: Bird, y, up):
         super().__init__()
-        self.vertical_distance = bird.rect.size[1] * 2
-
+        self.up = up
+        self.vertical_distance = bird.rect.size[1] * 3
+        self.y = y
         # loading the images
         self.images = [pg.image.load('assets/sprites/pipe-red.png'), pg.image.load('assets/sprites/pipe-green.png')]
 
         # selecting the images
         self.image_idx = random.randint(0, 2) % 2
-        self.image_down = self.images[self.image_idx]
+        self.image = self.images[self.image_idx] if not self.up else pg.transform.flip(self.images[self.image_idx],                                 
+                                                                                       False, True)
 
-        # Process the image for the pip coming from above
-        # self.image_up = pg.transform.rotate(pg.transform.scale(self.images[self.image_idx], ()), 180)
-        self.image_up = pg.transform.rotate(self.images[self.image_idx], 180)
         # Where will it be placed
-        self.x = SCREEN_WIDTH // 6
+        self.x = SCREEN_WIDTH // 3
 
         # down
-        self.rect_down = self.image_down.get_rect()
-        self.rect_down.x = self.x
-        self.rect_down.y = SCREEN_HEIGHT // 2
-
-        # Up
-        self.rect_up = self.image_up.get_rect()
-        self.rect_up.x = self.x
-        self.rect_up.y = self.rect_down.y - self.rect_down.size[1] - self.vertical_distance
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = (SCREEN_HEIGHT // 2) - self.y + self.vertical_distance
 
     def update(self):
-        self.image_idx = random.randint(0, 2) % 2
-        self.image_down, self.image_up = self.images[self.image_idx], self.images[self.image_idx]
+        self.rect.x -= 10
+        if self.rect.x + self.rect.size[0] <= 0:
+            self.rect.x = SCREEN_WIDTH + 30
+        # self.image_idx = random.randint(0, 2) % 2
+        # self.image = self.images[self.image_idx]
 
+
+def generate_pipe(bird_ref: Bird):
+    y = bird_ref.rect.y - bird_ref.rect.size[1]
+    pipe_list = [0, 0]
+    for i in range(2):
+        try:
+            print(pipe_list[0].rect.y, pipe_list[0].rect.size[1])
+            pipe_list[i] = Pipes(bird, pipe_list[0].rect.y, i)
+        except Exception:
+            pipe_list[i] = Pipes(bird, 0, i)
+    return pipe_list
 
 
 bird = Bird()
@@ -87,16 +95,20 @@ bird_group = pg.sprite.Group()
 bird_group.add(bird)
 
 # Pipes
-pipe = Pipes(bird)
+pipes_list = generate_pipe(bird)
 pipes_groups = pg.sprite.Group()
-pipes_groups.add(pipe)
+for pipe in pipes_list:
+    pipes_groups.add(pipe)
 
 running = True
 while running:
     clock.tick(20)
     screen.blit(BACKGROUND, (0, 0))
     # pipe
-    pipe.update()
+    i = 0
+    for pipe in pipes_list:
+        i += 1
+        pipe.update()
     pipes_groups.draw(screen)
 
     bird.update()
