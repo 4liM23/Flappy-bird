@@ -11,9 +11,10 @@ SCREEN_WIDTH = 450
 
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-class ImageHandler():
+class ImageHandler(pg.sprite.Sprite):
 
     def __init__(self) -> None:
+        super().__init__()
         self.asset = r".\assets\sprites\\"
         self.SCREEN_HEIGHT = 700
         self.SCREEN_WIDTH = 450
@@ -22,7 +23,10 @@ class ImageHandler():
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
         self.ZERO = pg.image.load(self.asset+"0.png")
-        self.ONE = pg.image.load(self.asset+"1.png")
+        self.image = pg.image.load(self.asset+"1.png")
+        self.rect = self.image.get_rect()
+        self.rect.x = self.SCREEN_WIDTH //2
+        self.rect.y = self.SCREEN_HEIGHT //2
         self.TWO = pg.image.load(self.asset+"2.png")
         self.THREE = pg.image.load(self.asset+"3.png")
         self.FOUR = pg.image.load(self.asset+"4.png")
@@ -31,7 +35,6 @@ class ImageHandler():
         self.SEVEN = pg.image.load(self.asset+"7.png")
         self.EIGHT = pg.image.load(self.asset+"8.png")
         self.NINE = pg.image.load(self.asset+"9.png")
-
 
 
     # next
@@ -105,9 +108,10 @@ class GameState():
     def game_over(self):
         pass
 
-    def best_score_screen(self):
+    def best_score_screen(self, bird_group:pg.sprite.Group):
         screen_center = (self.img.SCREEN_WIDTH//2, self.img.SCREEN_HEIGHT//2)
-        pg.draw.rect(self.img.BACKGROUND, self.img.BLACK, self.img.ONE)
+        bird_group.draw(screen)
+        pg.display.flip()
 
 
 
@@ -115,7 +119,10 @@ class GameState():
 bird = Bird()
 game_state = GameState()
 bird_group = pg.sprite.Group()
+number_group = pg.sprite.Group()
+number_group.add(game_state.img)
 bird_group.add(bird)
+
 
 running = True 
 while running:
@@ -132,7 +139,7 @@ while running:
                 bird.jump()
                 game_state.best_score+=1
             if event.key == pg.K_r:
-                game_state.best_score_screen()
+                game_state.best_score_screen(number_group)
 
 
 game_state.update_best_score()
