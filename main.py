@@ -32,7 +32,6 @@ class Bird(pg.sprite.Sprite):
         self.acceleration = 0.1
 
 
-
 # Vf = Vi + a * t
     def update(self):
         # updating flapping animation
@@ -51,12 +50,38 @@ class Bird(pg.sprite.Sprite):
         self.fall_time= 0
 
 
+class GameState():
+
+    data_path = r".\data.json"
+    with open(data_path) as f:
+        my_data = json.load(f)
+    
+    def __init__(self) -> None:
+        self.data_path = r".\data.json"
+        with open(self.data_path) as f:
+            self.my_data = json.load(f)
+        self.score = 0
+        self.best_score = self.my_data["best_score"]
+
+    def update_best_score(self):
+        self.my_data["best_score"] = self.best_score
+        with open (self.data_path, 'w') as f:
+            json.dump(self.my_data, f, indent=4)
+
+    def reset_best_score(self):
+        pass
+
+    def game_over(self):
+        pass
+
+
+
 
 bird = Bird()
-
+game_state = GameState()
 bird_group = pg.sprite.Group()
 bird_group.add(bird)
-
+pg.display.set_caption(str(game_state.best_score))
 
 running = True 
 while running:
@@ -71,5 +96,7 @@ while running:
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_SPACE:
                 bird.jump()
+                game_state.best_score+=1
 
+game_state.update_best_score()
 pg.quit()
