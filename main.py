@@ -94,9 +94,7 @@ while running:
                 bird.jump()
         print (bird.rect.y, SCREEN_HEIGHT - SCREEN_HEIGHT // 6  )
         if bird.rect.y >= (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) :
-            print ("hello world")
             gameOver = True
-            # screen.blit(GAMEOVER, (SCREEN_WIDTH // 2 - SCREEN_WIDTH // 4, SCREEN_HEIGHT // 4 - SCREEN_HEIGHT // 8))
 
         
 
