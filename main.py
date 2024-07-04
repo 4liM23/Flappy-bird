@@ -58,7 +58,7 @@ class Pipes(pg.sprite.Sprite):
 
         # selecting the images
         self.image_idx = random.randint(0, 2) % 2
-        self.image = self.images[self.image_idx] if not self.up else pg.transform.flip(self.images[self.image_idx],                                 
+        self.image = self.images[self.image_idx] if not self.up else pg.transform.flip(self.images[self.image_idx],
                                                                                        False, True)
 
         # Where will it be placed
@@ -78,12 +78,10 @@ class Pipes(pg.sprite.Sprite):
 
 
 def generate_pipe(bird_ref: Bird):
-    y = bird_ref.rect.y - bird_ref.rect.size[1]
     pipe_list = [0, 0]
     for i in range(2):
         try:
-            print(pipe_list[0].rect.y, pipe_list[0].rect.size[1])
-            pipe_list[i] = Pipes(bird, pipe_list[0].rect.y, i)
+            pipe_list[i] = Pipes(bird_ref, pipe_list[0].rect.y, i)
         except Exception:
             pipe_list[i] = Pipes(bird, 0, i)
     return pipe_list
