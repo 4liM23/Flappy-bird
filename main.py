@@ -26,16 +26,10 @@ class ImageHandler:
         self.BACKGROUND = pg.transform.scale(self.BACKGROUND, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
-        self.ZERO = pg.image.load(self.asset + "0.png")
-        self.ONE = pg.image.load(self.asset + "1.png")
-        self.TWO = pg.image.load(self.asset + "2.png")
-        self.THREE = pg.image.load(self.asset + "3.png")
-        self.FOUR = pg.image.load(self.asset + "4.png")
-        self.FIVE = pg.image.load(self.asset + "5.png")
-        self.SIX = pg.image.load(self.asset + "6.png")
-        self.SEVEN = pg.image.load(self.asset + "7.png")
-        self.EIGHT = pg.image.load(self.asset + "8.png")
-        self.NINE = pg.image.load(self.asset + "9.png")
+        self.digits = []
+        for i in range(10):
+            self.digits.append(pg.image.load(f"{self.asset}{i}.png"))
+        self.image = self.digits[0]
 
     # next
     def convert_number(self):
@@ -98,17 +92,17 @@ class GameState:
         with open(self.data_path, 'w') as f:
             json.dump(self.my_data, f, indent=4)
 
-    #next
+    # next
     def reset_best_score(self):
         pass
 
-    #next
+    # next
     def game_over(self):
         pass
 
     def best_score_screen(self):
         screen_center = (self.img.SCREEN_WIDTH // 2, self.img.SCREEN_HEIGHT // 2)
-        pg.draw.rect(self.img.BACKGROUND, self.img.BLACK, self.img.ONE)
+        pg.draw.rect(self.img.BACKGROUND, self.img.BLACK, self.img.digits[1])
 
 
 class Pipes(pg.sprite.Sprite):
