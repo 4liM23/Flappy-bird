@@ -1,9 +1,9 @@
 import pygame as pg
-import random
 import json
 import random
 import time
 
+ASSETS = r'assets/sprites/'
 
 pg.init()
 clock = pg.time.Clock()
@@ -12,49 +12,46 @@ SCREEN_WIDTH = 450
 
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-BACKGROUND = pg.image.load(r"assets/sprites/background-day.png")
+BACKGROUND = pg.image.load(rf"{ASSETS}background-day.png")
 BACKGROUND = pg.transform.scale(BACKGROUND, (SCREEN_WIDTH, SCREEN_HEIGHT))
-class ImageHandler():
+
+
+class ImageHandler:
 
     def __init__(self) -> None:
-        self.asset = r".\assets\sprites\\"
+        self.asset = rf"{ASSETS}"
         self.SCREEN_HEIGHT = 700
         self.SCREEN_WIDTH = 450
-        self.BACKGROUND = pg.image.load(r".\assets\sprites\background-day.png")
+        self.BACKGROUND = pg.image.load(rf"{ASSETS}background-day.png")
         self.BACKGROUND = pg.transform.scale(self.BACKGROUND, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
-        self.ZERO = pg.image.load(self.asset+"0.png")
-        self.ONE = pg.image.load(self.asset+"1.png")
-        self.TWO = pg.image.load(self.asset+"2.png")
-        self.THREE = pg.image.load(self.asset+"3.png")
-        self.FOUR = pg.image.load(self.asset+"4.png")
-        self.FIVE = pg.image.load(self.asset+"5.png")
-        self.SIX = pg.image.load(self.asset+"6.png")
-        self.SEVEN = pg.image.load(self.asset+"7.png")
-        self.EIGHT = pg.image.load(self.asset+"8.png")
-        self.NINE = pg.image.load(self.asset+"9.png")
-
-
+        self.ZERO = pg.image.load(self.asset + "0.png")
+        self.ONE = pg.image.load(self.asset + "1.png")
+        self.TWO = pg.image.load(self.asset + "2.png")
+        self.THREE = pg.image.load(self.asset + "3.png")
+        self.FOUR = pg.image.load(self.asset + "4.png")
+        self.FIVE = pg.image.load(self.asset + "5.png")
+        self.SIX = pg.image.load(self.asset + "6.png")
+        self.SEVEN = pg.image.load(self.asset + "7.png")
+        self.EIGHT = pg.image.load(self.asset + "8.png")
+        self.NINE = pg.image.load(self.asset + "9.png")
 
     # next
     def convert_number(self):
         pass
 
 
-
-
 class Bird(pg.sprite.Sprite):
 
     def __init__(self) -> None:
         super().__init__()
-        self.images = [pg.image.load(r"assets/sprites/bluebird-downflap.png"),
-                       pg.image.load(r"assets/sprites/bluebird-midflap.png"),
-                       pg.image.load(r"assets/sprites/bluebird-upflap.png")]
-        self.images = [pg.image.load(r".\assets\sprites\bluebird-downflap.png"),
-                        pg.image.load(r".\assets\sprites\bluebird-midflap.png"),
-                        pg.image.load(r".\assets\sprites\bluebird-upflap.png")]
-
+        self.images = [pg.image.load(rf"{ASSETS}bluebird-downflap.png"),
+                       pg.image.load(rf"{ASSETS}bluebird-midflap.png"),
+                       pg.image.load(rf"{ASSETS}bluebird-upflap.png")]
+        self.images = [pg.image.load(rf"{ASSETS}bluebird-downflap.png"),
+                       pg.image.load(rf"{ASSETS}bluebird-midflap.png"),
+                       pg.image.load(rf"{ASSETS}bluebird-upflap.png")]
 
         self.image_number = 0
         self.image = self.images[self.image_number]
@@ -83,15 +80,14 @@ class Bird(pg.sprite.Sprite):
         self.fall_time = 0
 
 
-class GameState():
-
-    data_path = r".\data.json"
+class GameState:
+    data_path = r"data.json"
     with open(data_path) as f:
         my_data = json.load(f)
-    
+
     def __init__(self) -> None:
         self.img = ImageHandler()
-        self.data_path = r".\data.json"
+        self.data_path = r"data.json"
         with open(self.data_path) as f:
             self.my_data = json.load(f)
         self.score = 0
@@ -99,7 +95,7 @@ class GameState():
 
     def update_best_score(self):
         self.my_data["best_score"] = self.best_score
-        with open (self.data_path, 'w') as f:
+        with open(self.data_path, 'w') as f:
             json.dump(self.my_data, f, indent=4)
 
     #next
@@ -111,7 +107,7 @@ class GameState():
         pass
 
     def best_score_screen(self):
-        screen_center = (self.img.SCREEN_WIDTH//2, self.img.SCREEN_HEIGHT//2)
+        screen_center = (self.img.SCREEN_WIDTH // 2, self.img.SCREEN_HEIGHT // 2)
         pg.draw.rect(self.img.BACKGROUND, self.img.BLACK, self.img.ONE)
 
 
@@ -122,7 +118,7 @@ class Pipes(pg.sprite.Sprite):
         self.vertical_distance = bird.rect.size[1] * 3
         self.y = y
         # loading the images
-        self.images = [pg.image.load('assets/sprites/pipe-red.png'), pg.image.load('assets/s        prites/pipe-green.png')]
+        self.images = [pg.image.load(rf'{ASSETS}pipe-red.png'), pg.image.load(rf'{ASSETS}pipe-green.png')]
 
         # selecting the images
         self.image_idx = random.randint(0, 2) % 2
@@ -152,7 +148,7 @@ def generate_pipe(bird_ref: Bird):
             pipe_list[i] = Pipes(bird_ref, pipe_list[0].rect.y, i)
         except Exception:
             pipe_list[i] = Pipes(bird, 0, i)
-    return pipe_list                            
+    return pipe_list
 
 
 bird = Bird()
@@ -170,14 +166,12 @@ running = True
 while running:
     clock.tick(20)
     screen.blit(BACKGROUND, (0, 0))
-    # pipe
-    i = 0
-    for pipe in pipes_list:
-        i += 1
-        pipe.update()
-    pipes_groups.draw(screen)
 
     screen.blit(game_state.img.BACKGROUND, (0, 0))
+    # pipe
+    for pipe in pipes_list:
+        pipe.update()
+    pipes_groups.draw(screen)
     bird.update()
     bird_group.draw(screen)
     pg.display.flip()
@@ -187,10 +181,9 @@ while running:
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_SPACE:
                 bird.jump()
-                game_state.best_score+=1
+                game_state.best_score += 1
             if event.key == pg.K_r:
                 game_state.best_score_screen()
-
 
 game_state.update_best_score()
 pg.quit()
