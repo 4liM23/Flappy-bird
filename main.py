@@ -2,27 +2,35 @@ import pygame as pg
 
 pg.init()
 clock = pg.time.Clock()
-SCREEN_HEIGHT = 1600
-SCREEN_WIDTH = 900
+SCREEN_HEIGHT = 700
+SCREEN_WIDTH = 450
 
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-BACKGROUND = pg.image.load(r"RC24\git_project1\Flappy-bird\assets\sprites\background-day.png")
+BACKGROUND = pg.image.load(r"assets/sprites/background-day.png")
 BACKGROUND = pg.transform.scale(BACKGROUND, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
+GAMEOVER = pg.image.load(r"assets/sprites/gameover.png").convert_alpha()
+GAMEOVER = pg.transform.scale(GAMEOVER, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 12))
 
-class ground(pygame.sprite.Sprite):
+class Ground(pg.sprite.Sprite):
+
     def __init__(self):
         super().__init__()
-        self.images = 
+        self.image = pg.image.load(r"assets/sprites/base.png").convert_alpha()
+        self.image = pg.transform.scale(self.image, (2 * SCREEN_WIDTH, SCREEN_HEIGHT // 6))
+        self.rect = self.image.get_rect()
+        self.rect.x = 0
+        self.rect.y = SCREEN_HEIGHT - SCREEN_HEIGHT // 6
+
 
 class Bird(pg.sprite.Sprite):
 
     def __init__(self) -> None:
         super().__init__()
-        self.images = [pg.image.load(r"RC24\git_project1\Flappy-bird\assets\sprites\bluebird-downflap.png"),
-                                pg.image.load(r"RC24\git_project1\Flappy-bird\assets\sprites\bluebird-midflap.png"),
-                                pg.image.load(r"RC24\git_project1\Flappy-bird\assets\sprites\bluebird-upflap.png")]
+        self.images = [pg.image.load(r"./assets/sprites\bluebird-downflap.png"),
+                                pg.image.load(r"./assets/sprites\bluebird-midflap.png"),
+                                pg.image.load(r"./assets/sprites\bluebird-upflap.png")]
 
 
         self.image_number = 0
@@ -58,15 +66,23 @@ class Bird(pg.sprite.Sprite):
 
 bird = Bird()
 
+ground = Ground()
+ground_group = pg.sprite.Group()
+ground_group.add(ground)
+
 bird_group = pg.sprite.Group()
 bird_group.add(bird)
 
 
 
 running = True 
+gameOver = False
 while running:
     clock.tick(20)
     screen.blit(BACKGROUND, (0, 0))
+    if gameOver:
+        screen.blit(GAMEOVER, (SCREEN_WIDTH // 2 - SCREEN_WIDTH // 4, SCREEN_HEIGHT // 4 - SCREEN_HEIGHT // 8))
+    ground_group.draw(screen)
     bird.update()
     bird_group.draw(screen)
     pg.display.flip()
@@ -76,5 +92,13 @@ while running:
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_SPACE:
                 bird.jump()
+        print (bird.rect.y, SCREEN_HEIGHT - SCREEN_HEIGHT // 6  )
+        if bird.rect.y >= (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) :
+            print ("hello world")
+            gameOver = True
+            # screen.blit(GAMEOVER, (SCREEN_WIDTH // 2 - SCREEN_WIDTH // 4, SCREEN_HEIGHT // 4 - SCREEN_HEIGHT // 8))
+
+        
+
 
 pg.quit()
