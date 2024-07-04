@@ -11,6 +11,11 @@ BACKGROUND = pg.image.load(r"RC24\git_project1\Flappy-bird\assets\sprites\backgr
 BACKGROUND = pg.transform.scale(BACKGROUND, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 
+class ground(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.images = 
+
 class Bird(pg.sprite.Sprite):
 
     def __init__(self) -> None:
