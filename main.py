@@ -82,19 +82,24 @@ while running:
     screen.blit(BACKGROUND, (0, 0))
     if gameOver:
         screen.blit(GAMEOVER, (SCREEN_WIDTH // 2 - SCREEN_WIDTH // 4, SCREEN_HEIGHT // 4 - SCREEN_HEIGHT // 8))
+        bird.acceleration = 0
+        bird.velocity = 0
+        bird.fall_time = 0
+        bird.rect.y = (SCREEN_HEIGHT - SCREEN_HEIGHT // 6)
     ground_group.draw(screen)
     bird.update()
     bird_group.draw(screen)
     pg.display.flip()
     for event in pg.event.get():
+        print (bird.rect.y, SCREEN_HEIGHT - SCREEN_HEIGHT // 6  )
+        if bird.rect.y >= (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) :
+            gameOver = True
         if event.type == pg.QUIT:
             running = False
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_SPACE:
                 bird.jump()
-        print (bird.rect.y, SCREEN_HEIGHT - SCREEN_HEIGHT // 6  )
-        if bird.rect.y >= (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) :
-            gameOver = True
+        
 
         
 
