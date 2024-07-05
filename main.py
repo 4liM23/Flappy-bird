@@ -108,10 +108,12 @@ class GameState():
     def game_over(self):
         pass
 
-    def best_score_screen(self, bird_group:pg.sprite.Group):
-        screen_center = (self.img.SCREEN_WIDTH//2, self.img.SCREEN_HEIGHT//2)
-        bird_group.draw(screen)
+    def best_score_screen(self, g:pg.sprite.Group):
+        g.draw(screen)
         pg.display.flip()
+
+    def score_screen(self):
+        screen.blit(screen, )
 
 
 
@@ -126,7 +128,9 @@ bird_group.add(bird)
 
 running = True 
 while running:
-    clock.tick(20)
+    clock.tick(30)
+    #debugging
+    print(clock.get_fps())
     screen.blit(game_state.img.BACKGROUND, (0, 0))
     bird.update()
     bird_group.draw(screen)
@@ -137,10 +141,11 @@ while running:
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_SPACE:
                 bird.jump()
-                game_state.best_score+=1
             if event.key == pg.K_r:
                 game_state.best_score_screen(number_group)
 
 
 game_state.update_best_score()
+game_state.best_score_screen()
+time.sleep(5)
 pg.quit()
