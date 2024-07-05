@@ -80,8 +80,6 @@ gameOver = False
 while running:
     clock.tick(20)
     screen.blit(BACKGROUND, (0, 0))
-    ground_group.draw(screen)
-    bird.update()
     bird_group.draw(screen)
     print (bird.rect.y, SCREEN_HEIGHT - SCREEN_HEIGHT // 6  )
     if bird.rect.y >= (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) :
