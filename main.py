@@ -55,8 +55,7 @@ class Bird(pg.sprite.Sprite):
         super().__init__()
         self.images = [pg.image.load(rf"{ASSETS}bluebird-downflap.png"),
                        pg.image.load(rf"{ASSETS}bluebird-midflap.png"),
-                       pg.image.load(rf"{ASSETS}bluebird-upflap.png")]
-
+                       pg.image.load(rf"{ASSETS}bluebird-upflap.png")]  
         self.image_number = 0
         self.image = self.images[self.image_number]
         self.rect = self.image.get_rect()
@@ -158,6 +157,8 @@ def generate_pipe(bird_ref: Bird):
 
 bird = Bird()
 
+
+
 ground = Ground()
 ground_group = pg.sprite.Group()
 ground_group.add(ground)
@@ -167,8 +168,9 @@ pipes_list = generate_pipe(bird)
 pipes_groups = pg.sprite.Group()
 for pipe in pipes_list:
     pipes_groups.add(pipe)
-
-
+game_state = GameState()
+bird_group = pg.sprite.Group()
+bird_group.add(bird)
 gameOver = False
 running = True
 while running:
