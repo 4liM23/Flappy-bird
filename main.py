@@ -55,8 +55,8 @@ class Bird(pg.sprite.Sprite):
     def __init__(self) -> None:
         super().__init__()
         self.images = [pg.image.load(rf"{ASSETS}bluebird-downflap.png"),
-                       pg.image.load(rf"{ASSETS}bluebird-midflap.png"),
-                       pg.image.load(rf"{ASSETS}bluebird-upflap.png")]  
+                        pg.image.load(rf"{ASSETS}bluebird-midflap.png"),
+                        pg.image.load(rf"{ASSETS}bluebird-upflap.png")]  
         self.image_number = 0
         self.image = self.images[self.image_number]
         self.rect = self.image.get_rect()
@@ -128,8 +128,7 @@ class Pipes(pg.sprite.Sprite):
 
         # selecting the images
         self.image_idx = random.randint(0, 2) % 2
-        self.image = self.images[self.image_idx] if not self.up else pg.transform.flip(self.images[self.image_idx],
-                                                                                       False, True)
+        self.image = self.images[self.image_idx] if not self.up else pg.transform.flip(self.images[self.image_idx],False, True)
 
         # Where will it be placed
         self.x = SCREEN_WIDTH // 3
@@ -146,11 +145,9 @@ class Pipes(pg.sprite.Sprite):
 
         # Check if bird is on collision with the pipe
 
-        if self.rect.x <= bird.rect.x + bird.rect.size[0] <= self.rect.x + self.rect.size[
-            0] or self.rect.x <= bird.rect.x <= self.rect.x + self.rect.size[0]:
-            if self.rect.y <= bird.rect.y + bird.rect.size[1] <= self.rect.y + self.rect.size[
-                1] or self.rect.y <= bird.rect.y <= self.rect.y + self.rect.size[1]:
-                exit()
+        if self.rect.x <= bird.rect.x + bird.rect.size[0] <= self.rect.x + self.rect.size[0] or self.rect.x <= bird.rect.x <= self.rect.x + self.rect.size[0]:
+            if self.rect.y <= bird.rect.y + bird.rect.size[1] <= self.rect.y + self.rect.size[1] or self.rect.y <= bird.rect.y <= self.rect.y + self.rect.size[1]:
+                gameOver=True
 
         # self.image_idx = random.randint(0, 2) % 2
         # self.image = self.images[self.image_idx]
@@ -185,10 +182,9 @@ bird_group = pg.sprite.Group()
 bird_group.add(bird)
 gameOver = False
 running = True
-while running:
+while (running):
     clock.tick(20)
     screen.blit(BACKGROUND, (0, 0))
-
     screen.blit(game_state.img.BACKGROUND, (0, 0))
     # pipe
     for pipe in pipes_list:
@@ -196,7 +192,7 @@ while running:
     pipes_groups.draw(screen)
     bird.update()
     bird_group.draw(screen)
-    print (bird.rect.y, SCREEN_HEIGHT - SCREEN_HEIGHT // 6  )
+    print (bird.rect.y, SCREEN_HEIGHT - SCREEN_HEIGHT // 6)
     if bird.rect.y >= (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) :
         gameOver = True
         running = False
@@ -217,7 +213,10 @@ if gameOver:
     bird.acceleration = 0
     bird.velocity = 0
     bird.rect.y = (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) - bird.rect.height
+    pg.display.flip()
+    time.sleep(2)
     
+
 
 
 game_state.update_best_score()
