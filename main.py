@@ -1,12 +1,9 @@
 import pygame as pg
-<<<<<<< HEAD
-=======
 import json
 import random
 import time
 
 ASSETS = r'assets/sprites/'
->>>>>>> 093e9dc07d0cbf23fe0c19aa0eea06a5db60ae17
 
 pg.init()
 clock = pg.time.Clock()
@@ -15,11 +12,7 @@ SCREEN_WIDTH = 450
 
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-<<<<<<< HEAD
-BACKGROUND = pg.image.load(r"assets/sprites/background-day.png")
-=======
 BACKGROUND = pg.image.load(rf"{ASSETS}background-day.png")
->>>>>>> 093e9dc07d0cbf23fe0c19aa0eea06a5db60ae17
 BACKGROUND = pg.transform.scale(BACKGROUND, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 GAMEOVER = pg.image.load(r"assets/sprites/gameover.png").convert_alpha()
@@ -60,19 +53,9 @@ class Bird(pg.sprite.Sprite):
 
     def __init__(self) -> None:
         super().__init__()
-<<<<<<< HEAD
-        self.images = [pg.image.load(r"./assets/sprites\bluebird-downflap.png"),
-                                pg.image.load(r"./assets/sprites\bluebird-midflap.png"),
-                                pg.image.load(r"./assets/sprites\bluebird-upflap.png")]
-
-=======
         self.images = [pg.image.load(rf"{ASSETS}bluebird-downflap.png"),
                        pg.image.load(rf"{ASSETS}bluebird-midflap.png"),
                        pg.image.load(rf"{ASSETS}bluebird-upflap.png")]
-        self.images = [pg.image.load(rf"{ASSETS}bluebird-downflap.png"),
-                       pg.image.load(rf"{ASSETS}bluebird-midflap.png"),
-                       pg.image.load(rf"{ASSETS}bluebird-upflap.png")]
->>>>>>> 093e9dc07d0cbf23fe0c19aa0eea06a5db60ae17
 
         self.image_number = 0
         self.image = self.images[self.image_number]
@@ -174,17 +157,10 @@ def generate_pipe(bird_ref: Bird):
 
 
 bird = Bird()
-<<<<<<< HEAD
 
 ground = Ground()
 ground_group = pg.sprite.Group()
 ground_group.add(ground)
-
-=======
-game_state = GameState()
->>>>>>> 093e9dc07d0cbf23fe0c19aa0eea06a5db60ae17
-bird_group = pg.sprite.Group()
-bird_group.add(bird)
 
 # Pipes
 pipes_list = generate_pipe(bird)
@@ -192,15 +168,8 @@ pipes_groups = pg.sprite.Group()
 for pipe in pipes_list:
     pipes_groups.add(pipe)
 
-<<<<<<< HEAD
 
-running = True 
 gameOver = False
-while running:
-    clock.tick(20)
-    screen.blit(BACKGROUND, (0, 0))
-    ground_group.draw(screen)
-=======
 running = True
 while running:
     clock.tick(20)
@@ -211,7 +180,6 @@ while running:
     for pipe in pipes_list:
         pipe.update()
     pipes_groups.draw(screen)
->>>>>>> 093e9dc07d0cbf23fe0c19aa0eea06a5db60ae17
     bird.update()
     bird_group.draw(screen)
     print (bird.rect.y, SCREEN_HEIGHT - SCREEN_HEIGHT // 6  )
@@ -229,7 +197,6 @@ while running:
             if event.key == pg.K_r:
                 game_state.best_score_screen()
 
-<<<<<<< HEAD
 
 if gameOver:
     screen.blit(GAMEOVER, (SCREEN_WIDTH // 2 - SCREEN_WIDTH // 4, SCREEN_HEIGHT // 4 - SCREEN_HEIGHT // 8))
@@ -239,7 +206,5 @@ if gameOver:
     
 
 
-=======
 game_state.update_best_score()
->>>>>>> 093e9dc07d0cbf23fe0c19aa0eea06a5db60ae17
 pg.quit()
