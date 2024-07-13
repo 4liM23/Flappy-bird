@@ -119,7 +119,9 @@ class Pipes(pg.sprite.Sprite):
     def __init__(self, bird: Bird, y, up):
         super().__init__()
         self.up = up
-        self.vertical_distance = bird.rect.size[1] * 3
+        self.bird_size = bird.rect.size[1]
+        self.gap_multiplier = 4
+        self.vertical_distance = self.bird_size * self.gap_multiplier
         self.y = y
         # loading the images
         self.images = [pg.image.load(rf'{ASSETS}pipe-red.png'), pg.image.load(rf'{ASSETS}pipe-green.png')]
@@ -141,6 +143,15 @@ class Pipes(pg.sprite.Sprite):
         self.rect.x -= 10
         if self.rect.x + self.rect.size[0] <= 0:
             self.rect.x = SCREEN_WIDTH + 30
+
+        # Check if bird is on collision with the pipe
+
+        if self.rect.x <= bird.rect.x + bird.rect.size[0] <= self.rect.x + self.rect.size[
+            0] or self.rect.x <= bird.rect.x <= self.rect.x + self.rect.size[0]:
+            if self.rect.y <= bird.rect.y + bird.rect.size[1] <= self.rect.y + self.rect.size[
+                1] or self.rect.y <= bird.rect.y <= self.rect.y + self.rect.size[1]:
+                exit()
+
         # self.image_idx = random.randint(0, 2) % 2
         # self.image = self.images[self.image_idx]
 
