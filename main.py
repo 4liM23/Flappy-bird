@@ -10,7 +10,8 @@ pg.init()
 clock = pg.time.Clock()
 SCREEN_HEIGHT = 700
 SCREEN_WIDTH = 450
-
+pipes_list = []
+pipes_group = None
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 BACKGROUND = pg.image.load(rf"{ASSETS}background-day.png")
@@ -120,29 +121,32 @@ class Pipes(pg.sprite.Sprite):
         super().__init__()
         self.up = up
         self.bird_size = bird.rect.size[1]
-        self.gap_multiplier = 4
+        self.gap_multiplier = random.randint(3, 8)
         self.vertical_distance = self.bird_size * self.gap_multiplier
         self.y = y
+        self.interval = 20
         # loading the images
         self.images = [pg.image.load(rf'{ASSETS}pipe-red.png'), pg.image.load(rf'{ASSETS}pipe-green.png')]
 
+
+
         # selecting the images
         self.image_idx = random.randint(0, 2) % 2
-        self.image = self.images[self.image_idx] if not self.up else pg.transform.flip(self.images[self.image_idx],
+        self.image = self.images[self.image_idx]
+        self.image = pg.transform.scale(self.image, (self.image.get_size()[0], SCREEN_HEIGHT - ((SCREEN_HEIGHT // 2) - self.y + self.vertical_distance))) if not self.up else pg.transform.flip(self.images[self.image_idx],
                                                                                        False, True)
 
         # Where will it be placed
-        self.x = SCREEN_WIDTH // 3
-
-        # down
+        self.x = SCREEN_WIDTH + self.interval
         self.rect = self.image.get_rect()
         self.rect.x = self.x
-        self.rect.y = (SCREEN_HEIGHT // 2) - self.y + self.vertical_distance
+        self.rect.y = (SCREEN_HEIGHT // 2) - self.y + self.vertical_distance if not self.up else 0
 
     def update(self):
         self.rect.x -= 10
         if self.rect.x + self.rect.size[0] <= 0:
-            self.rect.x = SCREEN_WIDTH + 30
+            # self.rect.x = SCREEN_WIDTH + 30
+            return False
 
         # Check if bird is on collision with the pipe
 
@@ -150,20 +154,25 @@ class Pipes(pg.sprite.Sprite):
             0] or self.rect.x <= bird.rect.x <= self.rect.x + self.rect.size[0]:
             if self.rect.y <= bird.rect.y + bird.rect.size[1] <= self.rect.y + self.rect.size[
                 1] or self.rect.y <= bird.rect.y <= self.rect.y + self.rect.size[1]:
-                exit()
-
+                exit()  # Place holder for (#Saud) from (#Mohammed)
+        return True
         # self.image_idx = random.randint(0, 2) % 2
         # self.image = self.images[self.image_idx]
 
 
 def generate_pipe(bird_ref: Bird):
-    pipe_list = [0, 0]
-    for i in range(2):
+    global pipes_list
+    global pipes_group
+    pipes_list = [0, 0]
+    for i in range(1, -1, -1):
         try:
-            pipe_list[i] = Pipes(bird_ref, pipe_list[0].rect.y, i)
+            pipes_list[i] = Pipes(bird_ref, 0, i)
         except Exception:
-            pipe_list[i] = Pipes(bird, 0, i)
-    return pipe_list
+            pipes_list[i] = Pipes(bird_ref, 0, i)
+    pipes_group = pg.sprite.Group()
+    for pipe in pipes_list:
+        pipes_group.add(pipe)
+    return pipes_list
 
 
 
@@ -177,26 +186,29 @@ ground_group.add(ground)
 
 # Pipes
 pipes_list = generate_pipe(bird)
-pipes_groups = pg.sprite.Group()
-for pipe in pipes_list:
-    pipes_groups.add(pipe)
+
 game_state = GameState()
 bird_group = pg.sprite.Group()
 bird_group.add(bird)
 gameOver = False
 running = True
+frame_no = 0
 while running:
     clock.tick(20)
+    frame_no += 1
     screen.blit(BACKGROUND, (0, 0))
 
     screen.blit(game_state.img.BACKGROUND, (0, 0))
     # pipe
     for pipe in pipes_list:
-        pipe.update()
-    pipes_groups.draw(screen)
+        flag = pipe.update()
+        if flag == False:
+            generate_pipe(bird)
+            flag = True
+            break
+    pipes_group.draw(screen)
     bird.update()
     bird_group.draw(screen)
-    print (bird.rect.y, SCREEN_HEIGHT - SCREEN_HEIGHT // 6  )
     if bird.rect.y >= (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) :
         gameOver = True
         running = False
