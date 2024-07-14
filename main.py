@@ -215,7 +215,7 @@ if gameOver:
     bird.rect.y = (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) - bird.rect.height
     pg.display.flip()
     time.sleep(2)
-    
+
 
 
 
