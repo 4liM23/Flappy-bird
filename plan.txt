@@ -1,0 +1,1 @@
+So I am thinking of making the game check for everything by intervals. Ideally: There would be a function that updates everything and
