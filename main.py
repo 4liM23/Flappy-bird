@@ -44,9 +44,13 @@ class ImageHandler:
             self.digits.append(pg.image.load(f"{self.asset}{i}.png"))
         self.image = self.digits[0]
 
-    # next
-    def convert_number(self):
-        pass
+    # praying this works
+    # 999 would be maximum score so we only need to find 3 digits
+    def convert_number(self, n):
+        d3 = n//100
+        d2 = (n//10)%10
+        d1 = n%10
+        print(n, d3, d2, d1)
 
 
 class Bird(pg.sprite.Sprite):
@@ -83,35 +87,26 @@ class Bird(pg.sprite.Sprite):
         self.fall_time = 0
 
 
-class GameState:
-    data_path = r"data.json"
-    with open(data_path) as f:
-        my_data = json.load(f)
+    # takes where the faces of bird and obj and checks of collision occurs --> True if there is, otherwise False
+    def crash(self, object):
+        flag = False
+        myLeft = self.rect.x
+        myRight = self.rect.x + self.rect.size[0]
+        myTop = self.rect.y
+        myBottom = self.rect.y + self.rect.size[1]
+        otherLeft = object.rect.x
+        otherRight = object.rect.x + object.rect.size[0]
+        otherTop = object.rect.y 
+        otherBottom = object.rect.y + object.rect.size[1]
 
-    def __init__(self) -> None:
-        self.img = ImageHandler()
-        self.data_path = r"data.json"
-        with open(self.data_path) as f:
-            self.my_data = json.load(f)
-        self.score = 0
-        self.best_score = self.my_data["best_score"]
+        # Check if bird is on collision with the pipe
 
-    def update_best_score(self):
-        self.my_data["best_score"] = self.best_score
-        with open(self.data_path, 'w') as f:
-            json.dump(self.my_data, f, indent=4)
+        if otherLeft <= myRight <= otherRight or otherLeft <= myLeft <= otherRight:
+            if otherTop <= myBottom <= otherBottom or otherTop <= myTop <= otherBottom:
+                flag=True
 
-    # next
-    def reset_best_score(self):
-        pass
-
-    # next
-    def game_over(self):
-        pass
-
-    def best_score_screen(self):
-        screen_center = (self.img.SCREEN_WIDTH // 2, self.img.SCREEN_HEIGHT // 2)
-        pg.draw.rect(self.img.BACKGROUND, self.img.BLACK, self.img.digits[1])
+        # All flagame_state should be False by defualt. True only if there is collision detected
+        return flag
 
 
 class Pipes(pg.sprite.Sprite):
@@ -130,7 +125,7 @@ class Pipes(pg.sprite.Sprite):
         self.image = self.images[self.image_idx] if not self.up else pg.transform.flip(self.images[self.image_idx],False, True)
 
         # Where will it be placed
-        self.x = SCREEN_WIDTH // 3
+        self.x = (SCREEN_WIDTH // 6) * 5
 
         # down
         self.rect = self.image.get_rect()
@@ -142,78 +137,110 @@ class Pipes(pg.sprite.Sprite):
         if self.rect.x + self.rect.size[0] <= 0:
             self.rect.x = SCREEN_WIDTH + 30
 
-        # Check if bird is on collision with the pipe
-
-        if self.rect.x <= bird.rect.x + bird.rect.size[0] <= self.rect.x + self.rect.size[0] or self.rect.x <= bird.rect.x <= self.rect.x + self.rect.size[0]:
-            if self.rect.y <= bird.rect.y + bird.rect.size[1] <= self.rect.y + self.rect.size[1] or self.rect.y <= bird.rect.y <= self.rect.y + self.rect.size[1]:
-                gameOver=True
-
         # self.image_idx = random.randint(0, 2) % 2
         # self.image = self.images[self.image_idx]
 
 
-def generate_pipe(bird_ref: Bird):
-    pipe_list = [0, 0]
-    for i in range(2):
-        try:
-            pipe_list[i] = Pipes(bird_ref, pipe_list[0].rect.y, i)
-        except Exception:
-            pipe_list[i] = Pipes(bird, 0, i)
-    return pipe_list
+class GameState:
+
+    def __init__(self) -> None:
+        # Bird
+        self.bird = Bird()
+        self.bird_group = pg.sprite.Group()
+        self.bird_group.add(self.bird)
+        # Ground
+        self.ground = Ground()
+        self.ground_group = pg.sprite.Group()
+        self.ground_group.add(self.ground)
+        # Pipes
+        self.pipes_list = self.generate_pipe()
+        self.pipes_groups = pg.sprite.Group()
+        for pipe in self.pipes_list:
+            self.pipes_groups.add(pipe)
+        
+        self.img = ImageHandler()
+        self.data_path = r"data.json"
+        with open(self.data_path) as f:
+            self.my_data = json.load(f)
+        self.score = 0
+        self.best_score = self.my_data["best_score"]
+        self.gameOver = False
+        self.running = True
+
+    def generate_pipe(self):
+        pipe_list = [0, 0]
+        for i in range(2):
+            try:
+                pipe_list[i] = Pipes(self.bird, pipe_list[0].rect.y, i)
+            except Exception:
+                pipe_list[i] = Pipes(self.bird, 0, i)
+        return pipe_list
+
+    def update_best_score(self):
+        self.my_data["best_score"] = self.best_score
+        with open(self.data_path, 'w') as f:
+            json.dump(self.my_data, f, indent=4)
+
+    def reset_best_score(self):
+        self.my_data["best_score"] = 0
+        with open(self.data_path, 'w') as f:
+            json.dump(self.my_data, f, indent=4)
+
+    # next
+    def game_over(self):
+        screen.blit(GAMEOVER, (SCREEN_WIDTH // 2 - SCREEN_WIDTH // 4, SCREEN_HEIGHT // 4 - SCREEN_HEIGHT // 8))
+        self.bird.acceleration = 0
+        self.bird.velocity = 0
+        self.bird.rect.y = (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) - self.bird.rect.height
+        pg.display.flip()
+        time.sleep(2)
 
 
 
-bird = Bird()
+    def best_score_screen(self):
+        screen_center = (self.img.SCREEN_WIDTH // 2, self.img.SCREEN_HEIGHT // 2)
+        pg.draw.rect(self.img.BACKGROUND, self.img.BLACK, self.img.digits[1])
 
+# Making a new game state and resetting variables
+def newGame():
+    game_state = GameState()
 
-
-ground = Ground()
-ground_group = pg.sprite.Group()
-ground_group.add(ground)
-
-# Pipes
-pipes_list = generate_pipe(bird)
-pipes_groups = pg.sprite.Group()
-for pipe in pipes_list:
-    pipes_groups.add(pipe)
 game_state = GameState()
-bird_group = pg.sprite.Group()
-bird_group.add(bird)
-gameOver = False
-running = True
-while (running):
+while (game_state.running):
     clock.tick(20)
     screen.blit(BACKGROUND, (0, 0))
     screen.blit(game_state.img.BACKGROUND, (0, 0))
     # pipe
-    for pipe in pipes_list:
+    for pipe in game_state.pipes_list:
         pipe.update()
-    pipes_groups.draw(screen)
-    bird.update()
-    bird_group.draw(screen)
-    print (bird.rect.y, SCREEN_HEIGHT - SCREEN_HEIGHT // 6)
-    if bird.rect.y >= (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) :
-        gameOver = True
-        running = False
+    game_state.pipes_groups.draw(screen)
+    game_state.bird.update()
+    game_state.bird_group.draw(screen)
+    print (game_state.bird.rect.y, SCREEN_HEIGHT - SCREEN_HEIGHT // 6)
+    if game_state.bird.rect.y >= (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) :
+        game_state.gameOver = True
+        game_state.running = False
     pg.display.flip()
+    # collision check | makes sure there is no collision with any pipe
+    if any(game_state.bird.crash(i) for i in game_state.pipes_list):
+        game_state.gameOver = True
+        game_state.running = False
+        print('crash!')
+
     for event in pg.event.get():
         if event.type == pg.QUIT:
-            running = False
+            game_state.running = False
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_SPACE:
-                bird.jump()
+                game_state.bird.jump()
                 game_state.best_score += 1
             if event.key == pg.K_r:
                 game_state.best_score_screen()
 
 
-if gameOver:
-    screen.blit(GAMEOVER, (SCREEN_WIDTH // 2 - SCREEN_WIDTH // 4, SCREEN_HEIGHT // 4 - SCREEN_HEIGHT // 8))
-    bird.acceleration = 0
-    bird.velocity = 0
-    bird.rect.y = (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) - bird.rect.height
-    pg.display.flip()
-    time.sleep(2)
+if game_state.gameOver:
+    game_state.game_over()
+
 
 
 
