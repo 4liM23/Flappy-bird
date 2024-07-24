@@ -12,11 +12,74 @@ SCREEN_WIDTH = 450
 
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-BACKGROUND = pg.image.load(rf"{ASSETS}background-day.png")
-BACKGROUND = pg.transform.scale(BACKGROUND, (SCREEN_WIDTH, SCREEN_HEIGHT))
+BACKGROUND_LIGHT = pg.image.load(rf"{ASSETS}background-day.png")
+BACKGROUND_LIGHT = pg.transform.scale(BACKGROUND_LIGHT, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
-GAMEOVER = pg.image.load(r"assets/sprites/gameover.png").convert_alpha()
+BACKGROUND_DARK = pg.image.load(rf"{ASSETS}background-night.png")
+BACKGROUND_DARK = pg.transform.scale(BACKGROUND_DARK, (SCREEN_WIDTH, SCREEN_HEIGHT))
+
+# here | make a function so  you can choose dark mode or light mode
+BACKGROUND = BACKGROUND_DARK
+
+LABEL = pg.image.load(rf"{ASSETS}label_flappy_bird.png").convert_alpha()
+LABEL = pg.transform.scale(LABEL, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 12))
+
+GAMEOVER = pg.image.load(rf"{ASSETS}gameover.png").convert_alpha()
 GAMEOVER = pg.transform.scale(GAMEOVER, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 12))
+
+BUTTON_PLAY = pg.image.load(rf"{ASSETS}button_play.png").convert_alpha()
+BUTTON_PLAY = pg.transform.scale(BUTTON_PLAY, (SCREEN_WIDTH // 3, SCREEN_HEIGHT // 16))
+
+BUTTON_MENU = pg.image.load(rf"{ASSETS}button_menu.png").convert_alpha()
+BUTTON_MENU = pg.transform.scale(BUTTON_MENU, (SCREEN_WIDTH // 3, SCREEN_HEIGHT // 16))
+
+class Digit(pg.sprite.Sprite):
+    
+    def __init__(self) :
+        super().__init__()
+        self.asset = ASSETS
+        self.digits = []
+        for i in range(10):
+            self.digits.append(pg.image.load(f"{self.asset}{i}.png"))
+        self.image:pg.Surface = self.digits[0]
+        self.rect = self.image.get_rect()
+        self.rect.x = 0
+        self.rect.y = 0
+
+    def update(self, new_number):
+        self.number = new_number
+        self.image = self.digits[self.number]
+
+class ImageHandler:
+
+    def __init__(self) -> None:
+        self.asset = rf"{ASSETS}"
+        self.BACKGROUND = pg.image.load(rf"{ASSETS}background-day.png")
+        self.BACKGROUND = pg.transform.scale(self.BACKGROUND, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.BLACK = (0, 0, 0)
+        self.WHITE = (255, 255, 255)
+        self.n3=self.n2=self.n1=0
+        self.digit_group = pg.sprite.Group()
+        self.d3=Digit()
+        self.d2=Digit()
+        self.d1=Digit()
+        self.d3.rect.y=self.d2.rect.y=self.d1.rect.y = SCREEN_HEIGHT//16
+        self.d2.rect.x = SCREEN_WIDTH//2
+        self.d3.rect.x = (SCREEN_WIDTH//2) - self.d3.rect.size[0]
+        self.d1.rect.x = (SCREEN_WIDTH//2) + self.d1.rect.size[0]
+        self.digit_group.add(self.d3, self.d2, self.d1)
+
+        
+
+    # praying this works
+    # 999 would be maximum score so we only need to find 3 digits
+    def convert_number(self, n):
+        self.n3 = n//100
+        self.n2 = (n//10)%10
+        self.n1 = n%10
+        self.d3.update(self.n3);self.d2.update(self.n2);self.d1.update(self.n1)
+
+
 
 class Ground(pg.sprite.Sprite):
 
@@ -27,30 +90,6 @@ class Ground(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = 0
         self.rect.y = SCREEN_HEIGHT - SCREEN_HEIGHT // 6
-
-
-class ImageHandler:
-
-    def __init__(self) -> None:
-        self.asset = rf"{ASSETS}"
-        self.SCREEN_HEIGHT = 700
-        self.SCREEN_WIDTH = 450
-        self.BACKGROUND = pg.image.load(rf"{ASSETS}background-day.png")
-        self.BACKGROUND = pg.transform.scale(self.BACKGROUND, (SCREEN_WIDTH, SCREEN_HEIGHT))
-        self.BLACK = (0, 0, 0)
-        self.WHITE = (255, 255, 255)
-        self.digits = []
-        for i in range(10):
-            self.digits.append(pg.image.load(f"{self.asset}{i}.png"))
-        self.image = self.digits[0]
-
-    # praying this works
-    # 999 would be maximum score so we only need to find 3 digits
-    def convert_number(self, n):
-        d3 = n//100
-        d2 = (n//10)%10
-        d1 = n%10
-        print(n, d3, d2, d1)
 
 
 class Bird(pg.sprite.Sprite):
@@ -140,7 +179,6 @@ class Pipes(pg.sprite.Sprite):
         # self.image_idx = random.randint(0, 2) % 2
         # self.image = self.images[self.image_idx]
 
-
 class GameState:
 
     def __init__(self) -> None:
@@ -197,10 +235,6 @@ class GameState:
 
 
 
-    def best_score_screen(self):
-        screen_center = (self.img.SCREEN_WIDTH // 2, self.img.SCREEN_HEIGHT // 2)
-        pg.draw.rect(self.img.BACKGROUND, self.img.BLACK, self.img.digits[1])
-
 # Making a new game state and resetting variables
 def newGame():
     game_state = GameState()
@@ -209,18 +243,20 @@ game_state = GameState()
 while (game_state.running):
     clock.tick(20)
     screen.blit(BACKGROUND, (0, 0))
-    screen.blit(game_state.img.BACKGROUND, (0, 0))
     # pipe
     for pipe in game_state.pipes_list:
         pipe.update()
     game_state.pipes_groups.draw(screen)
     game_state.bird.update()
     game_state.bird_group.draw(screen)
+    game_state.img.convert_number(game_state.score)
+    game_state.img.digit_group.draw(screen)
+    pg.display.flip()
     print (game_state.bird.rect.y, SCREEN_HEIGHT - SCREEN_HEIGHT // 6)
     if game_state.bird.rect.y >= (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) :
         game_state.gameOver = True
         game_state.running = False
-    pg.display.flip()
+
     # collision check | makes sure there is no collision with any pipe
     if any(game_state.bird.crash(i) for i in game_state.pipes_list):
         game_state.gameOver = True
@@ -233,16 +269,14 @@ while (game_state.running):
         if event.type == pg.KEYDOWN:
             if event.key == pg.K_SPACE:
                 game_state.bird.jump()
-                game_state.best_score += 1
+                game_state.score += 1
+                game_state.img.convert_number(game_state.score)
             if event.key == pg.K_r:
                 game_state.best_score_screen()
 
 
 if game_state.gameOver:
     game_state.game_over()
-
-
-
 
 
 game_state.update_best_score()
