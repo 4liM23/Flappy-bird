@@ -6,11 +6,19 @@ import time
 ASSETS = r'assets/sprites/'
 
 pg.init()
+pg.display.set_caption('Flappy bird!')
+pg.display.set_icon(pg.image.load(rf"{ASSETS}flappy_bird_icon.png"))
 clock = pg.time.Clock()
 SCREEN_HEIGHT = 700
 SCREEN_WIDTH = 450
 
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+
+HOVER_COLOR = BLUE
 
 BACKGROUND_LIGHT = pg.image.load(rf"{ASSETS}background-day.png")
 BACKGROUND_LIGHT = pg.transform.scale(BACKGROUND_LIGHT, (SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -31,10 +39,10 @@ MENU = pg.image.load(rf"{ASSETS}panel_score.png").convert_alpha()
 MENU = pg.transform.scale(MENU, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 6))
 
 BUTTON_PLAY = pg.image.load(rf"{ASSETS}button_play.png").convert_alpha()
-BUTTON_PLAY = pg.transform.scale(BUTTON_PLAY, (SCREEN_WIDTH // 3, SCREEN_HEIGHT // 16))
+BUTTON_PLAY = pg.transform.scale(BUTTON_PLAY, (round(BUTTON_PLAY.get_rect().size[0] * 2.5), round(BUTTON_PLAY.get_rect().size[1] * 2.5)))
 
 BUTTON_MENU = pg.image.load(rf"{ASSETS}button_menu.png").convert_alpha()
-BUTTON_MENU = pg.transform.scale(BUTTON_MENU, (SCREEN_WIDTH // 3, SCREEN_HEIGHT // 16))
+BUTTON_MENU = pg.transform.scale(BUTTON_MENU, (BUTTON_MENU.get_rect().size[0] * 3, BUTTON_MENU.get_rect().size[1] * 3))
 
 class Digit(pg.sprite.Sprite):
     
@@ -63,8 +71,6 @@ class ImageHandler:
     def __init__(self, type="L", x=0, y=0) -> None:
         self.x = x
         self.y = y
-        self.BLACK = (0, 0, 0)
-        self.WHITE = (255, 255, 255)
         self.digit_group = pg.sprite.Group()
         self.d3=Digit(type)
         self.d2=Digit(type)
@@ -94,6 +100,16 @@ class ImageHandler:
         n1 = n%10
         self.d3.update(n3);self.d2.update(n2);self.d1.update(n1)
         self.set_position()
+
+
+class Button(pg.sprite.Sprite):
+
+    def __init__(self, Surface:pg.surface.Surface, x, y) -> None:
+        super().__init__()
+        self.image = Surface
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
 
 
 
@@ -239,6 +255,8 @@ class GameState:
             self.pipes_list[0].counted_score = True
 
     def update_best_score(self):
+        if self.score > self.best_score :
+            self.best_score = self.score
         self.my_data["best_score"] = self.best_score
         with open(self.data_path, 'w') as f:
             json.dump(self.my_data, f, indent=4)
@@ -255,7 +273,7 @@ class GameState:
         self.bird.velocity = 0
         self.bird.rect.y = (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) - self.bird.rect.height
         pg.display.flip()
-        time.sleep(2)
+        time.sleep(1)
 
 
 
@@ -266,10 +284,9 @@ def newGame():
         clock.tick(20)
         screen.blit(BACKGROUND, (0, 0))
         # pipe
-        for pipe in game_state.pipes_list:
-            pipe.update()
+        game_state.pipes_groups.update()
         game_state.pipes_groups.draw(screen)
-        game_state.bird.update()
+        game_state.bird_group.update()
         game_state.bird_group.draw(screen)
         game_state.score_update()
         game_state.img.convert_number(game_state.score)
@@ -281,23 +298,26 @@ def newGame():
         if game_state.bird.rect.y >= (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) :
             game_state.gameOver = True
             game_state.running = False
+            print('crash! || type: ground')
 
         # collision check | makes sure there is no collision with any pipe
         if any(game_state.bird.crash(i) for i in game_state.pipes_list):
             game_state.gameOver = True
             game_state.running = False
-            print('crash!')
+            print('crash! || type: pipe')
 
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                game_state.running = False
+                game_state.update_best_score()
+                pg.quit()
+                exit()
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_SPACE:
                     game_state.bird.jump() 
+            if event.type == pg.MOUSEBUTTONUP:
+                game_state.bird.jump()
 
     if game_state.gameOver:
-        if game_state.score > game_state.best_score :
-            game_state.best_score = game_state.score
         game_state.update_best_score()
         game_state.game_over()
         menuGameOver(game_state.score, game_state.best_score)
@@ -308,13 +328,31 @@ def menuGameOver(score, bestscore):
     menu_score.convert_number(score)
     menu_bestscore = ImageHandler("M", SCREEN_WIDTH//2 + MENU.get_width()//3,(SCREEN_HEIGHT // 2 - SCREEN_HEIGHT // 12) + (MENU.get_height()//3)*2)
     menu_bestscore.convert_number(bestscore)
-    # displaying gameover menu, than digits on top
+    # displaying gameover menu, than digits on top, and the buttons underneath
+    # menuButton = Button(BUTTON_MENU, SCREEN_WIDTH//2 - BUTTON_MENU.get_rect().size[0]//2 , (SCREEN_HEIGHT // 2 + SCREEN_HEIGHT * 4 // 16))
+    playButton = Button(BUTTON_PLAY, SCREEN_WIDTH//2 - BUTTON_PLAY.get_rect().size[0]//2 , (SCREEN_HEIGHT // 2 + SCREEN_HEIGHT * 2// 16))
+    button_group = pg.sprite.Group([playButton])
+    button_group.draw(screen)
     screen.blit(MENU, (SCREEN_WIDTH // 2 - SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2 - SCREEN_HEIGHT // 12))
     menu_score.digit_group.draw(screen)
     menu_bestscore.digit_group.draw(screen)
     pg.display.flip()
 
-    time.sleep(2)
+    # loop waiting for player input
+    run = True
+    while run:
+        clock.tick(30)
+        button_group.draw(screen)
+        for event in pg.event.get():
+
+            if event.type == pg.QUIT:
+                pg.quit()
+                exit()
+            if event.type == pg.MOUSEBUTTONUP:
+                if playButton.rect.collidepoint(event.pos):
+                    newGame()
+                    run=False
+
 
 
 if __name__ == "__main__":
