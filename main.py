@@ -2,7 +2,7 @@ import pygame as pg
 import json
 import random
 import time
-    
+
 ASSETS = r'assets/sprites/'
 
 pg.init()
@@ -27,6 +27,9 @@ LABEL = pg.transform.scale(LABEL, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 12))
 GAMEOVER = pg.image.load(rf"{ASSETS}gameover.png").convert_alpha()
 GAMEOVER = pg.transform.scale(GAMEOVER, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 12))
 
+MENU = pg.image.load(rf"{ASSETS}panel_score.png").convert_alpha()
+MENU = pg.transform.scale(MENU, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 6))
+
 BUTTON_PLAY = pg.image.load(rf"{ASSETS}button_play.png").convert_alpha()
 BUTTON_PLAY = pg.transform.scale(BUTTON_PLAY, (SCREEN_WIDTH // 3, SCREEN_HEIGHT // 16))
 
@@ -35,12 +38,16 @@ BUTTON_MENU = pg.transform.scale(BUTTON_MENU, (SCREEN_WIDTH // 3, SCREEN_HEIGHT 
 
 class Digit(pg.sprite.Sprite):
     
-    def __init__(self) :
+    def __init__(self, type="L") :
         super().__init__()
         self.asset = ASSETS
         self.digits = []
-        for i in range(10):
-            self.digits.append(pg.image.load(f"{self.asset}{i}.png"))
+        if type == "M":
+            for i in range(10):
+                self.digits.append(pg.image.load(f"{self.asset}number_large_{i}.png"))
+        else:
+            for i in range(10):
+                self.digits.append(pg.image.load(f"{self.asset}{i}.png"))
         self.image:pg.Surface = self.digits[0]
         self.rect = self.image.get_rect()
         self.rect.x = 0
@@ -49,35 +56,44 @@ class Digit(pg.sprite.Sprite):
     def update(self, new_number):
         self.number = new_number
         self.image = self.digits[self.number]
+        self.rect = self.image.get_rect()
 
 class ImageHandler:
 
-    def __init__(self) -> None:
-        self.asset = rf"{ASSETS}"
-        self.BACKGROUND = pg.image.load(rf"{ASSETS}background-day.png")
-        self.BACKGROUND = pg.transform.scale(self.BACKGROUND, (SCREEN_WIDTH, SCREEN_HEIGHT))
+    def __init__(self, type="L", x=0, y=0) -> None:
+        self.x = x
+        self.y = y
         self.BLACK = (0, 0, 0)
         self.WHITE = (255, 255, 255)
-        self.n3=self.n2=self.n1=0
         self.digit_group = pg.sprite.Group()
-        self.d3=Digit()
-        self.d2=Digit()
-        self.d1=Digit()
-        self.d3.rect.y=self.d2.rect.y=self.d1.rect.y = SCREEN_HEIGHT//16
-        self.d2.rect.x = SCREEN_WIDTH//2
-        self.d3.rect.x = (SCREEN_WIDTH//2) - self.d3.rect.size[0]
-        self.d1.rect.x = (SCREEN_WIDTH//2) + self.d1.rect.size[0]
-        self.digit_group.add(self.d3, self.d2, self.d1)
+        self.d3=Digit(type)
+        self.d2=Digit(type)
+        self.d1=Digit(type)
+        self.set_position()
+        self.digit_group.add_internal(self.d3, 3)
+        self.digit_group.add_internal(self.d2, 3)
+        self.digit_group.add_internal(self.d1, 3)
 
-        
+    def set_position(self):
+        if self.x==0 and self.y==0 :
+            self.d3.rect.y=self.d2.rect.y=self.d1.rect.y = SCREEN_HEIGHT//16
+            self.d2.rect.x = SCREEN_WIDTH//2 - self.d2.rect.size[0]//2
+            self.d3.rect.x = self.d2.rect.x - self.d3.rect.size[0]
+            self.d1.rect.x = self.d2.rect.x + self.d2.rect.size[0]
+        else:
+            self.d3.rect.y=self.d2.rect.y=self.d1.rect.y = self.y
+            self.d2.rect.x = self.x - self.d2.rect.size[0]//2
+            self.d3.rect.x = self.d2.rect.x - self.d3.rect.size[0]
+            self.d1.rect.x = self.d2.rect.x + self.d2.rect.size[0]
 
     # praying this works
     # 999 would be maximum score so we only need to find 3 digits
     def convert_number(self, n):
-        self.n3 = n//100
-        self.n2 = (n//10)%10
-        self.n1 = n%10
-        self.d3.update(self.n3);self.d2.update(self.n2);self.d1.update(self.n1)
+        n3 = n//100
+        n2 = (n//10)%10
+        n1 = n%10
+        self.d3.update(n3);self.d2.update(n2);self.d1.update(n1)
+        self.set_position()
 
 
 
@@ -86,7 +102,7 @@ class Ground(pg.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.image = pg.image.load(r"assets/sprites/base.png").convert_alpha()
-        self.image = pg.transform.scale(self.image, (2 * SCREEN_WIDTH, SCREEN_HEIGHT // 6))
+        self.image = pg.transform.scale(self.image, (2 * SCREEN_WIDTH, SCREEN_HEIGHT // 5))
         self.rect = self.image.get_rect()
         self.rect.x = 0
         self.rect.y = SCREEN_HEIGHT - SCREEN_HEIGHT // 6
@@ -171,10 +187,13 @@ class Pipes(pg.sprite.Sprite):
         self.rect.x = self.x
         self.rect.y = (SCREEN_HEIGHT // 2) - self.y + self.vertical_distance
 
+        self.counted_score = False
+
     def update(self):
         self.rect.x -= 10
         if self.rect.x + self.rect.size[0] <= 0:
             self.rect.x = SCREEN_WIDTH + 30
+            self.counted_score = False
 
         # self.image_idx = random.randint(0, 2) % 2
         # self.image = self.images[self.image_idx]
@@ -206,13 +225,18 @@ class GameState:
         self.running = True
 
     def generate_pipe(self):
-        pipe_list = [0, 0]
+        pipe_list = []
         for i in range(2):
             try:
-                pipe_list[i] = Pipes(self.bird, pipe_list[0].rect.y, i)
+                pipe_list.append(Pipes(self.bird, pipe_list[0].rect.y, i))
             except Exception:
-                pipe_list[i] = Pipes(self.bird, 0, i)
+                pipe_list.append(Pipes(self.bird, 0, i))
         return pipe_list
+
+    def score_update(self):
+        if (self.pipes_list[0].rect.center[0] < self.bird.rect.center[0]) and self.pipes_list[0].counted_score == False:
+            self.score+=1
+            self.pipes_list[0].counted_score = True
 
     def update_best_score(self):
         self.my_data["best_score"] = self.best_score
@@ -238,46 +262,60 @@ class GameState:
 # Making a new game state and resetting variables
 def newGame():
     game_state = GameState()
-
-game_state = GameState()
-while (game_state.running):
-    clock.tick(20)
-    screen.blit(BACKGROUND, (0, 0))
-    # pipe
-    for pipe in game_state.pipes_list:
-        pipe.update()
-    game_state.pipes_groups.draw(screen)
-    game_state.bird.update()
-    game_state.bird_group.draw(screen)
-    game_state.img.convert_number(game_state.score)
-    game_state.img.digit_group.draw(screen)
-    pg.display.flip()
-    print (game_state.bird.rect.y, SCREEN_HEIGHT - SCREEN_HEIGHT // 6)
-    if game_state.bird.rect.y >= (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) :
-        game_state.gameOver = True
-        game_state.running = False
-
-    # collision check | makes sure there is no collision with any pipe
-    if any(game_state.bird.crash(i) for i in game_state.pipes_list):
-        game_state.gameOver = True
-        game_state.running = False
-        print('crash!')
-
-    for event in pg.event.get():
-        if event.type == pg.QUIT:
+    while (game_state.running):
+        clock.tick(20)
+        screen.blit(BACKGROUND, (0, 0))
+        # pipe
+        for pipe in game_state.pipes_list:
+            pipe.update()
+        game_state.pipes_groups.draw(screen)
+        game_state.bird.update()
+        game_state.bird_group.draw(screen)
+        game_state.score_update()
+        game_state.img.convert_number(game_state.score)
+        game_state.img.digit_group.draw(screen)
+        pg.display.flip()
+        # Debug
+        print (game_state.bird.rect.y, SCREEN_HEIGHT - SCREEN_HEIGHT // 6)
+        # ground-hit check | makes sure the bird is above allowed limit (ground)
+        if game_state.bird.rect.y >= (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) :
+            game_state.gameOver = True
             game_state.running = False
-        if event.type == pg.KEYDOWN:
-            if event.key == pg.K_SPACE:
-                game_state.bird.jump()
-                game_state.score += 1
-                game_state.img.convert_number(game_state.score)
-            if event.key == pg.K_r:
-                game_state.best_score_screen()
+
+        # collision check | makes sure there is no collision with any pipe
+        if any(game_state.bird.crash(i) for i in game_state.pipes_list):
+            game_state.gameOver = True
+            game_state.running = False
+            print('crash!')
+
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                game_state.running = False
+            if event.type == pg.KEYDOWN:
+                if event.key == pg.K_SPACE:
+                    game_state.bird.jump() 
+
+    if game_state.gameOver:
+        if game_state.score > game_state.best_score :
+            game_state.best_score = game_state.score
+        game_state.update_best_score()
+        game_state.game_over()
+        menuGameOver(game_state.score, game_state.best_score)
+
+def menuGameOver(score, bestscore):
+    # initializing both final score and best score digits
+    menu_score = ImageHandler("M", SCREEN_WIDTH//2 + MENU.get_width()//3, (SCREEN_HEIGHT // 2 - SCREEN_HEIGHT // 12) + MENU.get_height()//3)
+    menu_score.convert_number(score)
+    menu_bestscore = ImageHandler("M", SCREEN_WIDTH//2 + MENU.get_width()//3,(SCREEN_HEIGHT // 2 - SCREEN_HEIGHT // 12) + (MENU.get_height()//3)*2)
+    menu_bestscore.convert_number(bestscore)
+    # displaying gameover menu, than digits on top
+    screen.blit(MENU, (SCREEN_WIDTH // 2 - SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2 - SCREEN_HEIGHT // 12))
+    menu_score.digit_group.draw(screen)
+    menu_bestscore.digit_group.draw(screen)
+    pg.display.flip()
+
+    time.sleep(2)
 
 
-if game_state.gameOver:
-    game_state.game_over()
-
-
-game_state.update_best_score()
-pg.quit()
+if __name__ == "__main__":
+    newGame()
