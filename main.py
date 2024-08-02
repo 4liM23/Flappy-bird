@@ -123,6 +123,11 @@ class Ground(pg.sprite.Sprite):
         self.rect.x = 0
         self.rect.y = SCREEN_HEIGHT - SCREEN_HEIGHT // 6
 
+    # next
+    def update(self):
+        self.rect.x -= 10
+        if self.rect.x + self.rect.size[0] <= SCREEN_WIDTH + 10:
+            self.rect.x = 0
 
 class Bird(pg.sprite.Sprite):
 
@@ -172,9 +177,14 @@ class Bird(pg.sprite.Sprite):
 
         # Check if bird is on collision with the pipe
 
+        if myBottom >= (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) :
+            flag=True
+            print('crash! || type: ground')
+
         if otherLeft <= myRight <= otherRight or otherLeft <= myLeft <= otherRight:
             if otherTop <= myBottom <= otherBottom or otherTop <= myTop <= otherBottom:
                 flag=True
+                print('crash! || type: pipe')
 
         # All flagame_state should be False by defualt. True only if there is collision detected
         return flag
@@ -185,14 +195,16 @@ class Pipes(pg.sprite.Sprite):
         super().__init__()
         self.up = up
         self.bird_size = bird.rect.size[1]
-        self.gap_multiplier = 4
+        self.gap_multiplier = 5
         self.vertical_distance = self.bird_size * self.gap_multiplier
+        self.vertical_distance_wider = self.bird_size * (self.gap_multiplier+2)
         self.y = y
         # loading the images
         self.images = [pg.image.load(rf'{ASSETS}pipe-red.png'), pg.image.load(rf'{ASSETS}pipe-green.png')]
 
         # selecting the images
-        self.image_idx = random.randint(0, 2) % 2
+        # self.image_idx = random.randint(0, 2) % 2
+        self.image_idx = 1
         self.image = self.images[self.image_idx] if not self.up else pg.transform.flip(self.images[self.image_idx],False, True)
 
         # Where will it be placed
@@ -201,18 +213,24 @@ class Pipes(pg.sprite.Sprite):
         # down
         self.rect = self.image.get_rect()
         self.rect.x = self.x
-        self.rect.y = (SCREEN_HEIGHT // 2) - self.y + self.vertical_distance
-
+        if self.up:
+            self.rect.y = 0
+        else:
+            self.rect.y = self.y + self.image.get_rect().size[1] + self.vertical_distance
         self.counted_score = False
 
-    def update(self):
+    def update(self, num):
         self.rect.x -= 10
         if self.rect.x + self.rect.size[0] <= 0:
             self.rect.x = SCREEN_WIDTH + 30
+            if self.up:
+                self.rect.y = min(0, num - self.image.get_rect().size[1])
+            else:
+                self.rect.y = num + self.vertical_distance
+                if self.rect.y + self.image.get_rect().size[1] < SCREEN_HEIGHT - SCREEN_HEIGHT // 6:
+                    self.rect.y = num + self.vertical_distance_wider
             self.counted_score = False
 
-        # self.image_idx = random.randint(0, 2) % 2
-        # self.image = self.images[self.image_idx]
 
 class GameState:
 
@@ -283,28 +301,24 @@ def newGame():
     while (game_state.running):
         clock.tick(20)
         screen.blit(BACKGROUND, (0, 0))
-        # pipe
-        game_state.pipes_groups.update()
+        # updating and drawing
+        game_state.pipes_groups.update( random.choice( range( (SCREEN_HEIGHT//8) * 2, (SCREEN_HEIGHT//8) * 5, 20) ) )
         game_state.pipes_groups.draw(screen)
         game_state.bird_group.update()
         game_state.bird_group.draw(screen)
         game_state.score_update()
         game_state.img.convert_number(game_state.score)
         game_state.img.digit_group.draw(screen)
+        game_state.ground_group.update()
+        game_state.ground_group.draw(screen)
         pg.display.flip()
         # Debug
         print (game_state.bird.rect.y, SCREEN_HEIGHT - SCREEN_HEIGHT // 6)
-        # ground-hit check | makes sure the bird is above allowed limit (ground)
-        if game_state.bird.rect.y >= (SCREEN_HEIGHT - SCREEN_HEIGHT // 6) :
-            game_state.gameOver = True
-            game_state.running = False
-            print('crash! || type: ground')
 
         # collision check | makes sure there is no collision with any pipe
         if any(game_state.bird.crash(i) for i in game_state.pipes_list):
             game_state.gameOver = True
             game_state.running = False
-            print('crash! || type: pipe')
 
         for event in pg.event.get():
             if event.type == pg.QUIT:
